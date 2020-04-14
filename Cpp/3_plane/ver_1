@@ -1,0 +1,142 @@
+#include <iostream>
+#include <cstdlib>  //system("cls")
+#include <ctime>    //随机数种子
+#include <conio.h>  //putch()无缓冲输入
+#include <windows.h> //Sleep()
+#include <string>
+using namespace std;
+//全局变量
+int width, height;      //场地范围
+int x, y;               //飞机
+int b_x, b_y;           //子弹
+int e_x, e_y, e_speed;  //敌人
+int score;              //得分
+//渲染
+void render() {
+    string s{""};
+    system("cls");
+    cout << "Scroe:" << score << endl;
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+            if ((j == x) && (i == y)) {
+                s.append("*");  //飞机
+            } else if ((j == b_x) && (i == b_y)){
+                s.append("|");
+            } else if ((j == e_x) && (i == e_y)) {
+                s.append("#");
+            } else {
+                s.append(" ");
+            }
+        }
+        cout << s;
+        s.clear();
+        putchar('\n');
+    }
+    //Sleep(10);
+}
+//初始化
+void initialize() {
+    width = 30;
+    height = 18;
+    x = width / 2;
+    y = height / 2;
+    b_x = -1;
+    b_y = -1;
+    e_x = width / 2;
+    e_y = 0;
+    e_speed = 5;
+    score = 0;
+}
+//自动变化
+void updateWithoutInput() {
+    static int cnt = 0;
+    if (b_y >= 0) {
+        b_y--;
+    }
+    if (cnt == e_speed) {
+        if (e_y < height) {
+            e_y++;
+        } else {
+            e_x = rand() % width;
+            e_y = 0;
+            score--;
+        }
+        cnt = 0;
+    } else {
+        cnt++;
+    }
+    if ((e_x == b_x) && (e_y == b_y)) {     //子弹击中目标
+        score++;
+        b_y = -1;
+        e_y = 0;
+        e_x = rand() % width;
+        cnt = 0;
+        cout.put('\a');
+    } else if ((e_x == x) && (e_y == y)) {  //被敌人撞击
+        score -= 5; //分数为负数，游戏结束
+        cout.put('\a');
+    }
+}
+//输入后变化
+void updateWithInput() {
+    char movement;
+    if (kbhit()) {
+        movement = getch();
+        switch (movement)
+        {
+        case 'w':
+            if (y > 0) {
+                y--;
+            }
+            break;
+        case 's':
+            if (y < height - 1) {
+                y++;
+            }
+            break;
+        case 'a':
+            if (x > 0) {
+                x--;
+            }
+            break;
+        case 'd':
+            if (x < width - 1) {
+                x++;
+            }
+            break;
+        case ' ':   //空格键射击
+            b_x = x;
+            b_y = y - 1;
+            break;
+        case '\t':  //tab键暂停
+            do {
+                cout << "暂停中，请按tab键继续" << endl;
+            } while ('\t' != getch());
+        default:
+            break;
+        }
+    }
+}
+int main() {
+    initialize();
+    //规则简介
+    do {
+        system("cls");
+        cout << "<<<规则>>>" << endl;
+        cout << "ShootingHit  - Score+1" << endl;
+        cout << "Miss         - Score-1" << endl;
+        cout << "be Hited     - Score-5" << endl;
+        cout << "Score < 0    - GameOver" << endl;
+        cout << endl;
+        cout << ">>>tab键开始游戏<<<" << endl;
+    } while ('\t' != getch());
+    //游戏
+    while (score >= 0) {
+        render();
+        updateWithoutInput();
+        updateWithInput();
+    }
+    system("cls");
+    cout << endl << "  >>>GameOver<<<" << endl;
+    return 0;
+}
