@@ -69,12 +69,16 @@ void updateWithoutInput() {
         score++;
         b_y = -1;
         e_y = 0;
+        srand(time(NULL));
         e_x = rand() % width;
         cnt = 0;
         cout.put('\a');
     } else if ((e_x == x) && (e_y == y)) {  //被敌人撞击
         score -= 5; //分数为负数，游戏结束
         cout.put('\a');
+        e_y = 0;
+        srand(time(NULL));
+        e_x = rand() % width;
     }
 }
 //输入后变化
