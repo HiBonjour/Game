@@ -1,0 +1,120 @@
+#include <iostream>
+#include <cstdlib>  //system("cls")
+#include <ctime>    //随机数种子
+#include <conio.h>  //putch()无缓冲输入
+#include <windows.h> //Sleep()
+#include <string>
+using namespace std;
+//全局变量
+int width, height;      //场地范围
+int x, y;               //小球
+int v_x, v_y;           //球速度
+int b_x, b_y;           //挡板位置
+int score;              //得分
+//渲染
+void render();
+//初始化
+void initialize() {
+    width = 30;
+    height = 20;
+    //小球初始横坐标
+    srand((unsigned int)time(0));
+    x = rand() % (width - 2) + 1;
+    y = 1;
+    v_x = 1;
+    v_y = 1;
+    if (rand() % 2) {
+        v_x = -v_x;
+    }
+    b_x = width / 2;
+    b_y = height - 2;
+    score = 10;
+}
+//自动变化
+void updateWithoutInput() {
+    //运动
+    x = x + v_x;
+    y = y + v_y;
+    //撞墙反弹
+    if (x <= 0 || x >= width - 1) {
+        v_x = -v_x;
+    }
+    if (y <= 0 || y >= height) {
+        v_y = -v_y;
+    }
+    //触底
+    if (y == b_y) {
+        if ((x >= b_x - 5) && x <= b_x + 5) {
+            v_y = -v_y;
+            score++;
+        } else {
+            score--;
+        }
+    }
+}
+//输入后变化
+void updateWithInput() {
+    char movement;
+    if (kbhit()) {
+        movement = getch();
+        switch (movement)
+        {
+        case 'a':
+            if (b_x - 5 > 0) {
+                b_x--;
+            }
+            break;
+        case 'd':
+            if (b_x + 5 < width - 1) {
+                b_x++;
+            }
+            break;
+        case '\t':  //tab键暂停
+            do {
+                cout << "暂停中，请按tab键继续" << endl;
+            } while ('\t' != getch());
+        default:
+            break;
+        }
+    }
+}
+int main() {
+    initialize();
+    
+    while (score >= 0) {
+        render();
+        updateWithoutInput();
+        updateWithInput();
+    }
+    system("cls");
+    cout << endl << "  >>>GameOver<<<" << endl;
+    return 0;
+}
+void render() {
+    string s{ "" };
+    system("cls");
+    cout << "Scroe:" << score << endl;
+    for (int i = 0; i < width + 2; i++) {
+        cout.put('-');
+    }
+    cout << endl;
+    for (int i = 0; i < height; i++) {
+        for (int j = -1; j <= width; j++) {
+            if ((j == x) && (i == y)) {
+                s.append("*");
+            } else if (j == -1 || j == width) {
+                s.append("|");
+            } else if ((j >= b_x-5) && (j <= b_x+5) && (i == b_y)) {
+                s.append("*");
+            } else {
+                s.append(" ");
+            }
+        }
+        cout << s;
+        s.clear();
+        putchar('\n');
+    }
+    for (int i = 0; i < width + 2; i++) {
+        cout.put('-');
+    }
+}
