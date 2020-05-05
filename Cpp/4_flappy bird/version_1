@@ -1,0 +1,116 @@
+#include <iostream>
+#include <cstdlib>  //system("cls")
+#include <ctime>    //随机数种子
+#include <conio.h>  //putch()无缓冲输入
+#include <windows.h> //Sleep()
+#include <string>
+using namespace std;
+//全局变量
+int width, height;      //场地范围
+int x, y;               //小鸟
+int b_x, b_up, b_down;  //障碍物
+int score;              //得分
+//渲染
+void render();
+//随机产生墙体
+void build();
+//初始化
+void initialize() {
+    width = 30;
+    height = 20;
+    x = 5;
+    y = 0;
+    score = 0;
+    build();
+}
+//自动变化
+void updateWithoutInput() {
+    y++;
+    Sleep(100);
+    if (b_x > 0) {
+        b_x--;
+    } else {
+        build();
+    }
+    if (y >= height) {
+        score -= 10;
+        y = height / 2 - 1;
+    }
+    if (x == b_x) {
+        if (y >= b_up && y <= b_down) {
+            score++;
+        } else {
+            score -= 5;
+            cout.put('\a');
+            build();
+        }
+    }
+}
+//输入后变化
+void updateWithInput() {
+    char movement;
+    if (kbhit()) {
+        movement = getch();
+        switch (movement)
+        {
+        case ' ':
+            cout.put('\a');
+            if (y > 2) {
+                y -= 3;
+            } else if (y == 1 || y == 2) {
+                y = 0;
+            }
+            break;
+        case '\t':  //tab键暂停
+            do {
+                cout << "暂停中，请按tab键继续" << endl;
+            } while ('\t' != getch());
+        }
+    }
+}
+int main() {
+    initialize();
+    
+    while (score >= 0) {
+        render();
+        updateWithoutInput();
+        updateWithInput();
+    }
+    system("cls");
+    cout << endl << "  >>>GameOver<<<" << endl;
+    return 0;
+}
+void render() {
+    string s{ "" };
+    system("cls");
+    cout << "Scroe:" << score << endl;
+    cout << endl;
+    for (int i = 0; i < width; i++) {
+        cout.put('-');
+    }
+    cout << endl;
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+            if ((j == x) && (i == y)) {
+                s.append("@");
+            } else if ((j == b_x) && (i < b_up || i > b_down)) {
+                s.append("#");
+            } else {
+                s.append(" ");
+            }
+        }
+        cout << s;
+        s.clear();
+        putchar('\n');
+    }
+    for (int i = 0; i < width; i++) {
+        cout.put('-');
+    }
+    cout << endl;
+}
+void build() {
+    b_x = width - 1;
+    srand(static_cast<unsigned int>(time(0)));
+    b_up = rand() % (height - 8) + 1;
+    b_down = b_up + rand() % 2 + 3;
+}
