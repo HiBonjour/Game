@@ -1,0 +1,140 @@
+#include <iostream>
+#include <cstdlib>  //system("cls")
+#include <ctime>    //随机数种子
+#include <conio.h>  //putch()无缓冲输入
+#include <windows.h> //Sleep()
+#include <string>
+using namespace std;
+
+struct Enemy {
+    int x;
+    int y;
+    int step;
+};
+//全局变量
+int width, height;      //场地范围
+int x, y;               
+Enemy e[10];
+//渲染
+void render();
+//判断此位置是否存在敌人
+bool exitEnemy(int x, int y);
+//初始化
+void initialize() {
+    srand(static_cast<unsigned int>(time(0)));
+    width = 15;
+    height = 10;
+    x = width / 2;
+    y = height / 2;
+    int count = 0;
+    for (auto& i : e) {
+        i.step = count / 2;         //行动速度计时
+        count++;
+        do {
+            i.x = rand() % width;
+            i.y = rand() % height;
+        } while ((i.x - x) * (i.x - x) + (i.y - y) * (i.y - y) < 3);
+    }
+}
+//自动变化
+void updateWithoutInput() {
+    for (auto& i : e) {
+        if (i.step > 4) {       //敌人移动
+            if (i.x < x) {
+                i.x += rand() % 2;
+            } else if (i.x > x) {
+                i.x -= rand() % 2;
+            }
+            if (i.y < y) {
+                i.y += rand() % 2;
+            } else if (i.y > y) {
+                i.y -= rand() % 2;
+            }
+            i.step = 0;
+        } else {                //敌人移动冷却
+            i.step++;
+        }
+        if (i.x == x && i.y == y) {
+            cout << endl << "  >>>GameOver<<<" << endl;
+            exit(0);
+        }
+    }
+    Sleep(70);
+}
+//输入后变化
+void updateWithInput() {
+    char movement;
+    if (kbhit()) {
+        movement = getch();
+        switch (movement)
+        {
+        case 'w':
+            if (y > 0)
+                y--;
+            break;
+        case 's':
+            if (y < height-1)
+                y++;
+            break;
+        case 'a':
+            if (x > 0)
+                x--;
+            break;
+        case 'd':
+            if (x < width - 1)
+                x++;
+            break;
+        case '\t':  //tab键暂停
+            do {
+                cout << "暂停中，请按tab键继续" << endl;
+            } while ('\t' != getch());
+        }
+    }
+}
+int main() {
+    initialize();
+    while (true) {
+        render();
+        updateWithoutInput();
+        updateWithInput();
+    }
+    return 0;
+}
+void render() {
+    static string s{ "" };
+    system("cls");
+    for (int i = 0; i < width+2; i++) {
+        cout.put('#');
+    }
+    cout << endl;
+    for (int i = 0; i < height; i++) {
+        s.append("#");
+        for (int j = 0; j < width; j++) {
+            if ((j == x) && (i == y)) {
+                s.append("@");
+            } else if (exitEnemy(j, i)) {
+                s.append("*");
+            } else {
+                s.append(" ");
+            }
+        }
+        s.append("#");
+        cout << s;
+        s.clear();
+        putchar('\n');
+    }
+    for (int i = 0; i < width+2; i++) {
+        cout.put('#');
+    }
+    cout << endl;
+}
+bool exitEnemy(int x, int y) {
+    bool flag{ false };
+    for (auto& i : e) {
+        if (i.x == x && i.y == y) {
+            flag = true;
+            break;
+        }
+    }
+    return flag;
+}
