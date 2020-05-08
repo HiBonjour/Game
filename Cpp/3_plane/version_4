@@ -1,0 +1,159 @@
+#include <iostream>
+#include <cstdlib>  //system("cls")
+#include <ctime>    //随机数种子
+#include <conio.h>  //putch()无缓冲输入
+#include <windows.h> //Sleep()
+#include <string>
+#define width 30
+#define height 20
+#define enemyNum 3
+using namespace std;
+
+//全局变量
+int canvas[width][height] = { 0 };
+int x, y;
+int e_x[enemyNum], e_y[enemyNum];
+int score;
+//渲染
+void render();
+//敌人重生
+void enemyBirth(int n);
+//初始化
+void initialize() {
+    x = width / 2;
+    y = height * 3 / 4;
+    canvas[x][y] = 1;
+    score = 0;
+    for (int i = 0; i < enemyNum; i++) {
+        enemyBirth(i);
+    }
+}
+//输入
+void input() {
+    if (kbhit()) {
+        char input;
+        input = getch();
+        switch (input) {
+        case 'a':
+            if (x > 0) {
+                canvas[x][y] = 0;
+                x--;
+                canvas[x][y] = 1;
+            }
+            break;
+        case 'd':
+            if (x < width - 1) {
+                canvas[x][y] = 0;
+                x++;
+                canvas[x][y] = 1;
+            }
+            break;
+        case 'w':
+            if (y > 0) {
+                canvas[x][y] = 0;
+                y--;
+                canvas[x][y] = 1;
+            }
+            break;
+        case 's':
+            if (y < height - 1) {
+                canvas[x][y] = 0;
+                y++;
+                canvas[x][y] = 1;
+            }
+            break;
+        case ' ':
+            for (int i = x - 1; i < x + 2; i++) {
+                if (i < width && i >= 0) {
+                    canvas[i][y - 1] = 2;
+                }
+            }
+            break;
+        }
+    }
+}
+//自动
+void automatic() {
+    int i, j;
+    for (i = 0; i < height; i++) {
+        for (j = 0; j < width; j++) {
+            if (canvas[j][i] == 2) {
+                canvas[j][i] = 0;
+                if (i > 0) {
+                    canvas[j][i - 1] = 2;
+                }
+            }
+        }
+    }
+    for (i = 0; i < enemyNum; i++) {
+        static int step = 0;
+        if (canvas[e_x[i]][e_y[i]] == 2) {
+            enemyBirth(i);
+            score++;
+        }
+        if (step < 6) {
+            step++;
+        } else {
+            canvas[e_x[i]][e_y[i]] = 0;
+            if (e_y[i] < height - 1) {
+                e_y[i]++;
+                if (e_x[i] == x && e_y[i] == y) {
+                    enemyBirth(i);
+                    score -= 5;
+                }
+            } else {
+                enemyBirth(i);
+                score--;
+            }
+            canvas[e_x[i]][e_y[i]] = 3;
+            step = 0;
+        }
+    }
+}
+int main() {
+    initialize();
+    while (score >= 0) {
+        render();
+        automatic();
+        input();
+    }
+    system("cls");
+    cout << "===GameOver===";
+    return 0;
+}
+void render() {
+    static string s{ "" };
+    system("cls");
+    cout << "Score: " << score << endl;
+    for (int i = 0; i < width + 2; i++) {
+        cout.put('#');
+    }
+    cout << endl;
+    for (int i = 0; i < height; i++) {
+        s.append("#");
+        for (int j = 0; j < width; j++) {
+            if (canvas[j][i] == 1) {
+                s.append("*");
+            } else if (canvas[j][i] == 2) {
+                s.append("|");
+            } else if (canvas[j][i] == 3) {
+                s.append("$");
+            } else {
+                s.append(" ");
+            }
+        }
+        s.append("#");
+        cout << s;
+        s.clear();
+        putchar('\n');
+    }
+    for (int i = 0; i < width + 2; i++) {
+        cout.put('#');
+    }
+    cout << endl;
+}
+void enemyBirth(int n) {
+    e_x[n] = rand() % width;
+    e_y[n] = rand() % 3;
+    canvas[e_x[n]][e_y[n]] = 3;
+}
